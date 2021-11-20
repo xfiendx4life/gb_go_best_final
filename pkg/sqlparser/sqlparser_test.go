@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xfiendx4life/gb_go_best_final/sqlparser"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
 )
 
 func TestNewQueryNoWhere(t *testing.T) {
