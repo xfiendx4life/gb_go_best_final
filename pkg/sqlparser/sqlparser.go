@@ -8,6 +8,8 @@ import (
 type WhereClause struct {
 	// тут похоже нужно делать дерево условий
 	RawClause []string
+	tree      Tree
+	postfix   []string
 }
 
 type Query struct {
@@ -17,10 +19,41 @@ type Query struct {
 	Clause    WhereClause
 }
 
+type Node struct {
+	Data  string
+	Left  *Node
+	Right *Node
+}
+
+type Tree struct {
+	root *Node
+}
+
+type Operation struct {
+	name     string
+	priority int
+	binary   bool
+}
+
+type Operations map[string]Operation
+
+func InitOperations() Operations {
+	return Operations{
+		"<":   Operation{"<", 1, true},
+		">":   Operation{">", 1, true},
+		"<=":  Operation{"<=", 1, true},
+		">=":  Operation{">=", 1, true},
+		"=":   Operation{"=", 1, true},
+		"not": Operation{"not", 2, false},
+		"and": Operation{"and", 3, true},
+		"or":  Operation{"or", 4, true},
+	}
+}
+
 //Searching index of the first appereance of target string -1 if not in string
-func getIndexOf(data []string, target string) int {
+func getIndexOf(Data []string, target string) int {
 	ind := -1
-	for i, word := range data {
+	for i, word := range Data {
 		if strings.ToLower(word) == target {
 			return i
 		}
@@ -79,16 +112,30 @@ func (q *Query) ParseRawQuery(rawQuery string) []string {
 	return []string{}
 }
 
-type node struct {
-	data string
-	left *node
-	right *node
+func getHighestPriorityOperation(clause []string, ops Operations) int {
+	ind := -1
+	prior := -1
+	for i, el := range clause {
+		if _, ok := ops[el]; ok && ops[el].priority > prior {
+			ind = i
+			prior = ops[el].priority
+		}
+	}
+	return ind
 }
 
-type Tree struct {
-	root *node
-}
-
-func (q *Query) CreateTtree(query Query) *Tree {
-
+func (root *Node) ParseQuery(m []string, ops Operations) {
+	if len(m) == 1 {
+		root.Data = m[0]
+		return
+	}
+	ind := getHighestPriorityOperation(m, ops)
+	root.Data = m[ind]
+	if op := ops[m[ind]]; op.binary {
+		var Left Node
+		root.Left = &Left
+		root.Left.ParseQuery(m[:ind], ops)
+	}
+	root.Right = &Node{}
+	root.Right.ParseQuery(m[ind+1:], ops)
 }

@@ -32,3 +32,30 @@ func TestNewQueryWithoutFrom(t *testing.T) {
 	assert.Nil(t, q, "should be nil")
 	assert.NotNil(t, err)
 }
+
+func TestParseQueryBinaryOnly(t *testing.T) {
+	clause := []string{"a", ">", "b", "and", "c", "<", "d"}
+	root := sqlparser.Node{}
+	root.ParseQuery(clause, sqlparser.InitOperations())
+	assert.Equal(t, "and", root.Data)
+	assert.Equal(t, ">", root.Left.Data)
+	assert.Equal(t, "a", root.Left.Left.Data)
+	assert.Equal(t, "b", root.Left.Right.Data)
+	assert.Equal(t, "<", root.Right.Data)
+	assert.Equal(t, "c", root.Right.Left.Data)
+	assert.Equal(t, "d", root.Right.Right.Data)
+}
+
+func TestParseQuery(t *testing.T) {
+	clause := []string{"a", ">", "b", "and", "not", "c", "<", "d"}
+	root := sqlparser.Node{}
+	root.ParseQuery(clause, sqlparser.InitOperations())
+	assert.Equal(t, "and", root.Data)
+	assert.Equal(t, ">", root.Left.Data)
+	assert.Equal(t, "a", root.Left.Left.Data)
+	assert.Equal(t, "b", root.Left.Right.Data)
+	assert.Equal(t, "not", root.Right.Data)
+	assert.Equal(t, "<", root.Right.Right.Data)
+	assert.Equal(t, "c", root.Right.Right.Left.Data)
+	assert.Equal(t, "d", root.Right.Right.Right.Data)
+}
