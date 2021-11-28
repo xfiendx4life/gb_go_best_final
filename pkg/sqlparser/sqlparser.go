@@ -73,3 +73,22 @@ func NewQuery(query string) (*Query, error) {
 	}
 	return &q, nil
 }
+
+// Parse raw query to postfix form
+func (q *Query) ParseRawQuery(rawQuery string) []string {
+	return []string{}
+}
+
+type node struct {
+	data string
+	left *node
+	right *node
+}
+
+type Tree struct {
+	root *node
+}
+
+func (q *Query) CreateTtree(query Query) *Tree {
+
+}
