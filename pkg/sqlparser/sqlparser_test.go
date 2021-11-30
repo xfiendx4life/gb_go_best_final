@@ -11,14 +11,14 @@ func TestNewQueryNoWhere(t *testing.T) {
 	q, err := sqlparser.NewQuery("SELECT * from students")
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.TableName, "students")
-	assert.Nil(t, q.Clause.RawClause)
+	assert.Nil(t, q.Condition.RawCondition)
 }
 
 func TestNewQueryWithWhere(t *testing.T) {
 	q, err := sqlparser.NewQuery("SELECT * from students WHERE name =   'Jane' and lastname = 'Doe'")
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.TableName, "students")
-	assert.NotNil(t, q.Clause.RawClause)
+	assert.NotNil(t, q.Condition.RawCondition)
 }
 
 func TestNewQueryWithoutSelect(t *testing.T) {
@@ -34,9 +34,9 @@ func TestNewQueryWithoutFrom(t *testing.T) {
 }
 
 func TestParseQueryBinaryOnly(t *testing.T) {
-	clause := []string{"a", ">", "b", "and", "c", "<", "d"}
+	condition := []string{"a", ">", "b", "and", "c", "<", "d"}
 	root := sqlparser.Node{}
-	root.ParseQuery(clause, sqlparser.InitOperations())
+	root.ParseQueryToTree(condition, sqlparser.InitOperations())
 	assert.Equal(t, "and", root.Data)
 	assert.Equal(t, ">", root.Left.Data)
 	assert.Equal(t, "a", root.Left.Left.Data)
@@ -47,9 +47,9 @@ func TestParseQueryBinaryOnly(t *testing.T) {
 }
 
 func TestParseQuery(t *testing.T) {
-	clause := []string{"a", ">", "b", "and", "not", "c", "<", "d"}
+	condition := []string{"a", ">", "b", "and", "not", "c", "<", "d"}
 	root := sqlparser.Node{}
-	root.ParseQuery(clause, sqlparser.InitOperations())
+	root.ParseQueryToTree(condition, sqlparser.InitOperations())
 	assert.Equal(t, "and", root.Data)
 	assert.Equal(t, ">", root.Left.Data)
 	assert.Equal(t, "a", root.Left.Left.Data)
