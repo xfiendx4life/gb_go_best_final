@@ -40,16 +40,15 @@ func normalizeValidateQuery(query string) ([]string, error) {
 }
 
 // Func to create query and separate cols from condition
-func NewQuery(query string) *Query {
+func NewQuery() *Query {
 	return &Query{
-		rawQuery: query,
-		Columns:  make([]string, 0),
+		columns:  make([]string, 0),
 	}
 }
 
 // split raw query to condition and cols after validation
-func (q *Query) SplitToConditionAndCols() error {
-	splitted, err := normalizeValidateQuery(q.rawQuery)
+func (q *Query) SplitToConditionAndCols(rawQuery string) error {
+	splitted, err := normalizeValidateQuery(rawQuery)
 	if err != nil {
 		return fmt.Errorf("can't parse query: %s", err)
 	}
@@ -57,28 +56,30 @@ func (q *Query) SplitToConditionAndCols() error {
 	if ind == -1 {
 		return fmt.Errorf("error parsing query: no table chosen")
 	}
-	q.Columns = splitted[1:ind]
-	q.TableName = strings.ToLower(splitted[ind+1])
+	q.columns = splitted[1:ind]
+	q.tableName = strings.ToLower(splitted[ind+1])
 	ind = getIndexOf(splitted, "where")
 	if ind == -1 {
 		q.Condition.RawCondition = nil
 	} else {
-		q.Condition.RawCondition = splitted[ind:]
+		q.Condition.RawCondition = splitted[ind+1:]
 	}
 	return nil
 }
 
 // Parse raw query to postfix form
-func (q *Query) ParseRawQuery(rawQuery string) error {
-	err := q.SplitToConditionAndCols()
+func (q *Query) ParseToPostfix(rawQuery string) ([]string, error) {
+	err := q.SplitToConditionAndCols(rawQuery)
 	if err != nil {
-		return fmt.Errorf("can't parse raw query %s", err)
+		return nil, fmt.Errorf("can't parse raw query %s", err)
 	}
 	root := Node{}
 	ops := InitOperations()
 	root.ParseQueryToTree(q.Condition.RawCondition, ops)
 	q.Condition.tree = &root
-	return nil
+	postfix := make([]string, 0)
+	root.postorder(&postfix)
+	return postfix, nil
 }
 
 // find index of operation with the highest priority
@@ -111,10 +112,20 @@ func (root *Node) ParseQueryToTree(m []string, ops Operations) {
 	root.Right.ParseQueryToTree(m[ind+1:], ops)
 }
 
-func (root *Node) postorder(m []string) {
+func (root *Node) postorder(m *[]string) {
 	if root != nil {
 		root.Left.postorder(m)
 		root.Right.postorder(m)
-		m = append(m, root.Data)
+		*m = append(*m, root.Data)
 	}
+}
+
+func (q *Query) GetResultCols() (cols []string) {
+	cols = q.columns
+	return
+}
+
+func (q *Query) GetTableName() (tableName string) {
+	tableName = q.tableName
+	return
 }

@@ -7,10 +7,11 @@ type WhereCondition struct {
 	postfix      []string
 }
 
+// we keep all the data in 
 type Query struct {
 	rawQuery  string
-	TableName string
-	Columns   []string // all columns if empty
+	tableName string
+	columns   []string // all columns if empty
 	Condition WhereCondition
 }
 
@@ -25,6 +26,8 @@ type Operation struct {
 	priority int
 	binary   bool
 }
+
+type Command []string
 
 type Operations map[string]Operation
 
