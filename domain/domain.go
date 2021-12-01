@@ -6,5 +6,5 @@ type Table interface {
 }
 
 type Query interface {
-	ParseRawQuery(rawQuery string) []string // to postfix form
+	ParseRawQuery(rawQuery string) error // to postfix form
 }

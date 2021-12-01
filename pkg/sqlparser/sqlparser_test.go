@@ -8,28 +8,31 @@ import (
 )
 
 func TestNewQueryNoWhere(t *testing.T) {
-	q, err := sqlparser.NewQuery("SELECT * from students")
+	q := sqlparser.NewQuery("SELECT * from students")
+	err := q.SplitToConditionAndCols()
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.TableName, "students")
 	assert.Nil(t, q.Condition.RawCondition)
 }
 
 func TestNewQueryWithWhere(t *testing.T) {
-	q, err := sqlparser.NewQuery("SELECT * from students WHERE name =   'Jane' and lastname = 'Doe'")
+	q:= sqlparser.NewQuery("SELECT * from students WHERE name =   'Jane' and lastname = 'Doe'")
+	err := q.SplitToConditionAndCols()
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.TableName, "students")
 	assert.NotNil(t, q.Condition.RawCondition)
 }
 
 func TestNewQueryWithoutSelect(t *testing.T) {
-	q, err := sqlparser.NewQuery("* from students WHERE name =   'Jane' and lastname = 'Doe'")
-	assert.Nil(t, q, "should be nil")
+	q:= sqlparser.NewQuery("* from students WHERE name =   'Jane' and lastname = 'Doe'")
+	err := q.SplitToConditionAndCols()
 	assert.NotNil(t, err)
 }
 
 func TestNewQueryWithoutFrom(t *testing.T) {
-	q, err := sqlparser.NewQuery("SELECT * students WHERE name =   'Jane' and lastname = 'Doe'")
-	assert.Nil(t, q, "should be nil")
+	q := sqlparser.NewQuery("SELECT * students WHERE name =   'Jane' and lastname = 'Doe'")
+	err := q.SplitToConditionAndCols()
+	assert.Nil(t, q.Condition.RawCondition, "should be nil")
 	assert.NotNil(t, err)
 }
 

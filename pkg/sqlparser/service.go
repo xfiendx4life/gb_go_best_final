@@ -40,18 +40,22 @@ func normalizeValidateQuery(query string) ([]string, error) {
 }
 
 // Func to create query and separate cols from condition
-func NewQuery(query string) (*Query, error) {
-	q := Query{
+func NewQuery(query string) *Query {
+	return &Query{
 		rawQuery: query,
 		Columns:  make([]string, 0),
 	}
-	splitted, err := normalizeValidateQuery(query)
+}
+
+// split raw query to condition and cols after validation
+func (q *Query) SplitToConditionAndCols() error {
+	splitted, err := normalizeValidateQuery(q.rawQuery)
 	if err != nil {
-		return nil, fmt.Errorf("can't parse query: %s", err)
+		return fmt.Errorf("can't parse query: %s", err)
 	}
 	ind := getIndexOf(splitted, "from")
 	if ind == -1 {
-		return nil, fmt.Errorf("error parsing query: no table chosen")
+		return fmt.Errorf("error parsing query: no table chosen")
 	}
 	q.Columns = splitted[1:ind]
 	q.TableName = strings.ToLower(splitted[ind+1])
@@ -61,12 +65,20 @@ func NewQuery(query string) (*Query, error) {
 	} else {
 		q.Condition.RawCondition = splitted[ind:]
 	}
-	return &q, nil
+	return nil
 }
 
 // Parse raw query to postfix form
-func (q *Query) ParseRawQuery(rawQuery string) []string {
-	return []string{}
+func (q *Query) ParseRawQuery(rawQuery string) error {
+	err := q.SplitToConditionAndCols()
+	if err != nil {
+		return fmt.Errorf("can't parse raw query %s", err)
+	}
+	root := Node{}
+	ops := InitOperations()
+	root.ParseQueryToTree(q.Condition.RawCondition, ops)
+	q.Condition.tree = &root
+	return nil
 }
 
 // find index of operation with the highest priority
@@ -97,4 +109,12 @@ func (root *Node) ParseQueryToTree(m []string, ops Operations) {
 	}
 	root.Right = &Node{}
 	root.Right.ParseQueryToTree(m[ind+1:], ops)
+}
+
+func (root *Node) postorder(m []string) {
+	if root != nil {
+		root.Left.postorder(m)
+		root.Right.postorder(m)
+		m = append(m, root.Data)
+	}
 }
