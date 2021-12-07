@@ -1,10 +1,17 @@
 package domain
 
+import "io"
+
 type Table interface {
-	// Reads data from csv
-	Read(csv_table []byte) (n int, err error)
+	// Reads headers from
+	ReadLine(source io.Reader) (err error)
 	// parses whole command sequence
-	ParseCommands(commands []Command) Table 
+	ParseCommands(commands []Command) Table
+}
+
+type Source interface {
+	// Open file for reading
+	Read(path string) (file []byte, err error)
 }
 
 type Command interface {
@@ -13,8 +20,8 @@ type Command interface {
 }
 
 type Query interface {
-	// Parses query from string to []commands, 
-	// which is postfix form of query 
+	// Parses query from string to []commands,
+	// which is postfix form of query
 	ParseToPostfix(rawQuery string) ([]string, error) // to postfix form
 	// returns cols names to be listed in result table
 	GetResultCols() (cols []string)
