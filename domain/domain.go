@@ -28,3 +28,11 @@ type Query interface {
 	// returns tablename
 	GetTableName() (tableName string, err error)
 }
+
+type Config interface {
+	// get path of table
+	GetPath() (path string)
+	// read config from file with path
+	ReadConfig(path string) (err error)
+	
+}
