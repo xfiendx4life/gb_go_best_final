@@ -9,7 +9,7 @@ import (
 )
 
 func TestReadHeaders(t *testing.T) {
-	r := cs.NewRawData()
+	r := cs.NewData()
 	rdr := strings.NewReader("iso_code,continent,location,date,total_cases")
 	err := r.ReadLine(rdr)
 	assert.Nil(t, err)

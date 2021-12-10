@@ -6,7 +6,9 @@ type Table interface {
 	// Reads headers from
 	ReadLine(source io.Reader) (err error)
 	// parses whole command sequence
-	ParseCommands(commands []Command) Table
+	// returns the same structure ready to parse 
+	//another query
+	ProceedQuery(query string) (Table, error)
 }
 
 type Source interface {
@@ -27,6 +29,8 @@ type Query interface {
 	GetResultCols() (cols []string)
 	// returns tablename
 	GetTableName() (tableName string, err error)
+	// proceed query on row
+	SelectFromRow(postfixQuery []string) (result map[string]string, err error)
 }
 
 type Config interface {

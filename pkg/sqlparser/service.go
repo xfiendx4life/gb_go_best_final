@@ -3,6 +3,8 @@ package sqlparser
 import (
 	"fmt"
 	"strings"
+
+	"github.com/xfiendx4life/gb_go_best_final/pkg/operations"
 )
 
 //Searching index of the first appereance of target string -1 if not in string
@@ -42,7 +44,7 @@ func normalizeValidateQuery(query string) ([]string, error) {
 // Func to create query and separate cols from condition
 func NewQuery() *Query {
 	return &Query{
-		columns:  make([]string, 0),
+		columns: make([]string, 0),
 	}
 }
 
@@ -74,7 +76,7 @@ func (q *Query) ParseToPostfix(rawQuery string) ([]string, error) {
 		return nil, fmt.Errorf("can't parse raw query %s", err)
 	}
 	root := Node{}
-	ops := InitOperations()
+	ops := operations.InitOperations()
 	root.ParseQueryToTree(q.Condition.RawCondition, ops)
 	q.Condition.tree = &root
 	postfix := make([]string, 0)
@@ -83,27 +85,27 @@ func (q *Query) ParseToPostfix(rawQuery string) ([]string, error) {
 }
 
 // find index of operation with the highest priority
-func getHighestPriorityOperation(condition []string, ops Operations) int {
+func getHighestPriorityOperation(condition []string, ops operations.Operations) int {
 	ind := -1
 	prior := -1
 	for i, el := range condition {
-		if _, ok := ops[el]; ok && ops[el].priority > prior {
+		if _, ok := ops[el]; ok && ops[el].Priority > prior {
 			ind = i
-			prior = ops[el].priority
+			prior = ops[el].Priority
 		}
 	}
 	return ind
 }
 
 // parsing condition of query to tree
-func (root *Node) ParseQueryToTree(m []string, ops Operations) {
+func (root *Node) ParseQueryToTree(m []string, ops operations.Operations) {
 	if len(m) == 1 {
 		root.Data = m[0]
 		return
 	}
 	ind := getHighestPriorityOperation(m, ops)
 	root.Data = m[ind]
-	if op := ops[m[ind]]; op.binary {
+	if op := ops[m[ind]]; op.Binary {
 		var Left Node
 		root.Left = &Left
 		root.Left.ParseQueryToTree(m[:ind], ops)
@@ -128,4 +130,13 @@ func (q *Query) GetResultCols() (cols []string) {
 func (q *Query) GetTableName() (tableName string) {
 	tableName = q.tableName
 	return
+}
+
+func (q *Query) SelectFromRow(postfix []string) (res map[string]string, err error) {
+	stack := make([]string, len(postfix) / 2)
+	ops:= operations.InitOperations()
+	for i, item := range postfix {
+		if o, ok := ops[item]; ok
+		// complete this shit
+	}
 }

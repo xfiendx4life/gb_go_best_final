@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	ops "github.com/xfiendx4life/gb_go_best_final/pkg/operations"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
 )
 
@@ -17,7 +18,7 @@ func TestNewQueryNoWhere(t *testing.T) {
 }
 
 func TestNewQueryWithWhere(t *testing.T) {
-	q:= sqlparser.NewQuery()
+	q := sqlparser.NewQuery()
 	err := q.SplitToConditionAndCols("SELECT * from students WHERE name =   'Jane' and lastname = 'Doe'")
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.GetTableName(), "students")
@@ -25,7 +26,7 @@ func TestNewQueryWithWhere(t *testing.T) {
 }
 
 func TestNewQueryWithoutSelect(t *testing.T) {
-	q:= sqlparser.NewQuery()
+	q := sqlparser.NewQuery()
 	err := q.SplitToConditionAndCols("* from students WHERE name =   'Jane' and lastname = 'Doe'")
 	assert.NotNil(t, err)
 }
@@ -40,7 +41,7 @@ func TestNewQueryWithoutFrom(t *testing.T) {
 func TestParseQueryBinaryOnly(t *testing.T) {
 	condition := []string{"a", ">", "b", "and", "c", "<", "d"}
 	root := sqlparser.Node{}
-	root.ParseQueryToTree(condition, sqlparser.InitOperations())
+	root.ParseQueryToTree(condition, ops.InitOperations())
 	assert.Equal(t, "and", root.Data)
 	assert.Equal(t, ">", root.Left.Data)
 	assert.Equal(t, "a", root.Left.Left.Data)
@@ -53,7 +54,7 @@ func TestParseQueryBinaryOnly(t *testing.T) {
 func TestParseQuery(t *testing.T) {
 	condition := []string{"a", ">", "b", "and", "not", "c", "<", "d"}
 	root := sqlparser.Node{}
-	root.ParseQueryToTree(condition, sqlparser.InitOperations())
+	root.ParseQueryToTree(condition, ops.InitOperations())
 	assert.Equal(t, "and", root.Data)
 	assert.Equal(t, ">", root.Left.Data)
 	assert.Equal(t, "a", root.Left.Left.Data)
