@@ -7,7 +7,7 @@ type Operation struct {
 	Priority int
 	Binary   bool
 	BasicOp func(_ basicOps) bool
-	logicOps func(_ logicOps) bool
+	LogicOp func(_ logicOps) bool
 }
 
 type Operations map[string]Operation

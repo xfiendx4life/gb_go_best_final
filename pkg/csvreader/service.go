@@ -35,7 +35,8 @@ func (r *Data) ProceedQuery(query string) (data *Data, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("cant' proceed query %s", err)
 	}
-	data.Result, err = q.SelectFromRow(postfix)
+	var isValid bool
+	isValid, err = q.SelectFromRow(postfix)
 	if err != nil {
 		return nil, fmt.Errorf("can't proceed query %s", err)
 	}

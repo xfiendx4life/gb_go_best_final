@@ -4,6 +4,8 @@ import "io"
 
 type Table interface {
 	// Reads headers from
+	ReadHeaders(source io.Reader) (err error)
+	// Reads any line
 	ReadLine(source io.Reader) (err error)
 	// parses whole command sequence
 	// returns the same structure ready to parse 
@@ -30,7 +32,7 @@ type Query interface {
 	// returns tablename
 	GetTableName() (tableName string, err error)
 	// proceed query on row
-	SelectFromRow(postfixQuery []string) (result map[string]string, err error)
+	SelectFromRow(postfixQuery []string) (result bool, err error)
 }
 
 type Config interface {

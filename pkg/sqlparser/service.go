@@ -133,32 +133,55 @@ func (q *Query) GetTableName() (tableName string) {
 	return
 }
 
-func (q *Query) SelectFromRow(postfix []string) (res map[string]string, err error) {
-	stack := NewStack(len(postfix) / 2)
-	ops:= operations.InitOperations()
+func (q *Query) SelectFromRow(postfix []string, row map[string]string) (res bool, err error) {
+	stack := NewStack(0)
+	ops := operations.InitOperations()
 	for _, item := range postfix {
 		if o, ok := ops[item]; !ok {
-			stack.Push(item)
+			if value, ok := row[item]; ok {
+				stack.Push(value)
+			} else {
+				stack.Push(item)
+			}
+
 		} else {
-			// var a, b string
-			a, err := stack.Pop()
-				if err != nil {
-					return nil, fmt.Errorf("stack error while making select %s", err)
-				}
+			var res string
+			b, err := stack.Pop()
+			if err != nil {
+				return false, fmt.Errorf("stack error while making select %s", err)
+			}
+			var a string
+			// cheking if operation is binary
 			if o.Binary {
-				b, err := stack.Pop()
+				a, err = stack.Pop()
 				if err != nil {
-					return nil, fmt.Errorf("stack error while making select %s", err)
-				}
-				if o.BasicOp != nil {
-					op, err := operations.OpsBuilder(a, b)
-					if err != nil {
-						return nil, fmt.Errorf("can't select row %s", err)
-					}
-					stack.Push(strconv.FormatBool(o.BasicOp(op)))
+					return false, fmt.Errorf("stack error while making select %s", err)
 				}
 			}
-		// complete this shit
+			// check if operation is comapration
+			if o.BasicOp != nil {
+				op, err := operations.OpsBuilder(a, b)
+				if err != nil {
+					return false, fmt.Errorf("can't select row %s", err)
+				}
+				res = strconv.FormatBool(o.BasicOp(op))
+			} else { // check if operation is logic
+				op, err := operations.LogicBuilder(b, a)
+				if err != nil {
+					return false, fmt.Errorf("error while making select %s", err)
+				}
+				res = strconv.FormatBool(o.LogicOp(op))
+			}
+			stack.Push(res)
+			// complete this shit
+		}
 	}
-}
+	if stack.IsEmpty() || stack.Len() > 1 {
+		return false, fmt.Errorf("not valid stack computation")
+	}
+	res, err = strconv.ParseBool(stack.data[0])
+	if err != nil {
+		return false, fmt.Errorf("can't parse bool %s", err)
+	}
+	return res, nil
 }

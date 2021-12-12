@@ -55,7 +55,6 @@ func (fl *floatOpers) equal() bool {
 // 	a, b time
 // }
 
-// TODO: change for working with one argument
 func OpsBuilder(op1, op2 string) (basicOps, error) {
 	if a, ok := getNumeric(op1); ok {
 		if b, ok := getNumeric(op2); ok {
@@ -90,7 +89,7 @@ func LogicBuilder(ops ...string) (logicOps, error) {
 	if a, err = strconv.ParseBool(ops[0]); err != nil {
 		return nil, fmt.Errorf("can't parse bool %s", err)
 	}
-	if len(ops) > 1 {
+	if ops[1] != "" {
 		if b, err = strconv.ParseBool(ops[1]); err != nil {
 			return nil, fmt.Errorf("can't parse bool %s", err)
 		}

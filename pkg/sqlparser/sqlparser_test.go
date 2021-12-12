@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	ops "github.com/xfiendx4life/gb_go_best_final/pkg/operations"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
 )
@@ -72,3 +73,40 @@ func TestParseRawQuery(t *testing.T) {
 	assert.NotEmpty(t, res)
 	log.Print(res)
 }
+
+func TestStackIsEmpty(t *testing.T) {
+	st := sqlparser.NewStack(0)
+	assert.True(t, st.IsEmpty())
+}
+
+func TestStackPushAndPop(t *testing.T) {
+	st := sqlparser.NewStack(0)
+	st.Push("test")
+	assert.False(t, st.IsEmpty())
+	res, err := st.Pop()
+	assert.Nil(t, err)
+	assert.Equal(t, "test", res)
+	assert.True(t, st.IsEmpty())
+}
+
+func TestStackPushAndLen(t *testing.T) {
+	st := sqlparser.NewStack(0)
+	st.Push("test")
+	assert.False(t, st.IsEmpty())
+	res := st.Len()
+	assert.Equal(t, 1, res)
+}
+
+func TestSelectFromRow(t *testing.T) {
+	q := sqlparser.NewQuery()
+	postfix := []string{"a", "4", ">", "c", "6", "<", "not", "and"}
+	row := map[string]string{
+		"a": "5",
+		"c": "8",
+	}
+	res, err := q.SelectFromRow(postfix, row)
+	require.Nil(t, err)
+	require.True(t, res)
+}
+
+//TODO: more tests before continue

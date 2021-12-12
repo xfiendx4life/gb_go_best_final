@@ -30,3 +30,7 @@ func NewStack(length int) *Stack {
 func (s *Stack) Push(d string) {
 	s.data = append(s.data, d)
 }
+
+func (s *Stack) Len() int {
+	return len(s.data)
+}
