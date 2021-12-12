@@ -10,6 +10,6 @@ type Data struct {
 	headers     []string
 	currentLine []string
 	reader      *csv.Reader
-	Result      map[string]string
+	Table      map[string][]string
 	mu          sync.Mutex
 }

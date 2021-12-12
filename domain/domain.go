@@ -4,23 +4,18 @@ import "io"
 
 type Table interface {
 	// Reads headers from
-	ReadHeaders(source io.Reader) (err error)
+	ReadHeaders(source io.Reader) (headers []string, err error)
 	// Reads any line
-	ReadLine(source io.Reader) (err error)
+	ReadRow(source io.Reader) (row []string, err error)
 	// parses whole command sequence
-	// returns the same structure ready to parse 
+	// returns the same structure ready to parse
 	//another query
-	ProceedQuery(query string) (Table, error)
+	ProceedQuery(query string, headers []string) (Table, error)
 }
 
 type Source interface {
 	// Open file for reading
 	Read(path string) (file []byte, err error)
-}
-
-type Command interface {
-	// Executes one command and returns resulting table
-	Execute(table Table) Table
 }
 
 type Query interface {
@@ -40,5 +35,4 @@ type Config interface {
 	GetPath() (path string)
 	// read config from file with path
 	ReadConfig(path string) (err error)
-	
 }
