@@ -110,3 +110,25 @@ func TestSelectFromRow(t *testing.T) {
 }
 
 //TODO: more tests before continue
+func TestSelectFromRowEmpty(t *testing.T) {
+	q := sqlparser.NewQuery()
+	postfix := []string{}
+	row := map[string]string{
+		"a": "5",
+		"c": "8",
+	}
+	_, err := q.SelectFromRow(postfix, row)
+	require.NotNil(t, err)
+}
+
+func TestSelectFromRowWrongTypes(t *testing.T) {
+	q := sqlparser.NewQuery()
+	postfix := []string{"a", "4", ">", "c", "6", "<", "not", "and"}
+	row := map[string]string{
+		"a": "string",
+		"c": "strng",
+	}
+	res, err := q.SelectFromRow(postfix, row)
+	require.Nil(t, err)
+	require.True(t, res)
+}

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// change this func for reading from config
+//TODO: change this func for reading from config
 func InitOperations() Operations {
 	return Operations{
 		"<":   Operation{"<", 1, true, basicOps.less, nil},
@@ -27,6 +27,7 @@ func getNumeric(s string) (float64, bool) {
 	return 0, false
 }
 
+// implements basicOps interface to work wit float operands
 type floatOpers struct {
 	a, b float64
 }
@@ -51,10 +52,7 @@ func (fl *floatOpers) equal() bool {
 	return fl.a == fl.b
 }
 
-// type dateOpers struct {
-// 	a, b time
-// }
-
+// Operands builder check type of operands and return structure with operands
 func OpsBuilder(op1, op2 string) (basicOps, error) {
 	if a, ok := getNumeric(op1); ok {
 		if b, ok := getNumeric(op2); ok {

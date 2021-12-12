@@ -133,6 +133,8 @@ func (q *Query) GetTableName() (tableName string) {
 	return
 }
 
+// Checks if where clause returns true or false with current row
+// if types are different SelectFromRow works as if they are strings
 func (q *Query) SelectFromRow(postfix []string, row map[string]string) (res bool, err error) {
 	stack := NewStack(0)
 	ops := operations.InitOperations()
