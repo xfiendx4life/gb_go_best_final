@@ -2,6 +2,7 @@ package sqlparser
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/operations"
@@ -133,10 +134,31 @@ func (q *Query) GetTableName() (tableName string) {
 }
 
 func (q *Query) SelectFromRow(postfix []string) (res map[string]string, err error) {
-	stack := make([]string, len(postfix) / 2)
+	stack := NewStack(len(postfix) / 2)
 	ops:= operations.InitOperations()
-	for i, item := range postfix {
-		if o, ok := ops[item]; ok
+	for _, item := range postfix {
+		if o, ok := ops[item]; !ok {
+			stack.Push(item)
+		} else {
+			// var a, b string
+			a, err := stack.Pop()
+				if err != nil {
+					return nil, fmt.Errorf("stack error while making select %s", err)
+				}
+			if o.Binary {
+				b, err := stack.Pop()
+				if err != nil {
+					return nil, fmt.Errorf("stack error while making select %s", err)
+				}
+				if o.BasicOp != nil {
+					op, err := operations.OpsBuilder(a, b)
+					if err != nil {
+						return nil, fmt.Errorf("can't select row %s", err)
+					}
+					stack.Push(strconv.FormatBool(o.BasicOp(op)))
+				}
+			}
 		// complete this shit
 	}
+}
 }

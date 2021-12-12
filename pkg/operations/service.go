@@ -55,6 +55,7 @@ func (fl *floatOpers) equal() bool {
 // 	a, b time
 // }
 
+// TODO: change for working with one argument
 func OpsBuilder(op1, op2 string) (basicOps, error) {
 	if a, ok := getNumeric(op1); ok {
 		if b, ok := getNumeric(op2); ok {
