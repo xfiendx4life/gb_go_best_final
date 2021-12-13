@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
 )
@@ -20,8 +21,16 @@ func (r *Data) GetHeaders() []string {
 	return r.headers
 }
 
+func (r *Data) GetTable() map[string][]string {
+	return r.Table
+}
+
 func (r *Data) ReadRow(source io.Reader) (row []string, err error) {
-	r.reader = csv.NewReader(source)
+	if r.reader == nil {
+		r.reader = csv.NewReader(source)
+	}
+	// TODO: Read comma from config
+	r.reader.Comma = ','
 	row, err = r.reader.Read()
 	if err != nil {
 		return nil, err
@@ -46,7 +55,7 @@ func (r *Data) composeRow(headers []string, row []string) (composedRow map[strin
 	return composedRow
 }
 
-func (r *Data) ProceedQuery(query string, q sqlparser.Querier, row []string) (data *Data, err error) {
+func (r *Data) ProceedQuery(query string, q sqlparser.Querier, row []string) (data Table, err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	postfix, err := q.ParseToPostfix(query)
@@ -66,4 +75,28 @@ func (r *Data) ProceedQuery(query string, q sqlparser.Querier, row []string) (da
 	}
 	data = r
 	return data, nil
+}
+
+func (r *Data) ProceedFullTable(source io.Reader, rawQuery string) (table Table, err error) {
+	_, err = r.ReadHeaders(source)
+	if err != nil {
+		return nil, fmt.Errorf("can't read headers %s", err)
+	}
+	q := sqlparser.NewQuery()
+	var wg sync.WaitGroup
+	for {
+		row, err := r.ReadRow(source)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("can't parse table %s", err)
+		}
+		wg.Add(1)
+		go func(row []string) {
+			r.ProceedQuery(rawQuery, q, row)
+			wg.Done()
+		}(row)
+	}
+	wg.Wait()
+	return r, nil
 }

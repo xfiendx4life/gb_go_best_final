@@ -21,7 +21,10 @@ type Table interface {
 	// parses whole command sequence
 	// returns the same structure ready to parse
 	//another query
-	ProceedQuery(raw_query string, query sqlparser.Query, row []string) (Table, error)
+	ProceedQuery(rawQuery string, query sqlparser.Querier, row []string) (Table, error)
+	// proceeds select query to the whole table concurrently
+	ProceedFullTable(source io.Reader, rawQuery string) (table Table, err error)
+	GetTable() map[string][]string
 }
 
 // rawData of csv file, where key is header of table and key is a slice of rows

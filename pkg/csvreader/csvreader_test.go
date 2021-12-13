@@ -1,7 +1,6 @@
 package csvreader_test
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 	"testing"
@@ -34,10 +33,9 @@ func TestProceedData(t *testing.T) {
 	r.ReadHeaders(strings.NewReader("a,c"))
 	row := []string{"5", "8"}
 	q := sqlparser.NewQuery()
-	r, err := r.ProceedQuery(query, q, row)
+	r1, err := r.ProceedQuery(query, q, row)
 	require.Nil(t, err)
-	fmt.Println(r.Table)
-	require.Equal(t, "5", r.Table["a"][0])
+	require.Equal(t, "5", r1.GetTable()["a"][0])
 }
 
 func TestProceedConcurrentData(t *testing.T) {
@@ -57,6 +55,19 @@ func TestProceedConcurrentData(t *testing.T) {
 	}
 	wg.Wait()
 	assert.Equal(t, 2, len(r.Table["a"]))
+}
+
+func TestProceedFullTable(t *testing.T) {
+	source := `a,c
+5,8
+5,6
+`
+	query := "SELECT * FROM tablename where a > 4 and not c < 5"
+	r := cs.NewData()
+	tab, err := r.ProceedFullTable(strings.NewReader(source), query)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(tab.GetTable()))
+	assert.Equal(t, []string{"5", "5"}, tab.GetTable()["a"])
 }
 
 // TODO: More tests
