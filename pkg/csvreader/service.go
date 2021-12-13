@@ -46,16 +46,15 @@ func (r *Data) composeRow(headers []string, row []string) (composedRow map[strin
 	return composedRow
 }
 
-func (r *Data) ProceedQuery(query string, headers []string, row []string) (data *Data, err error) {
+func (r *Data) ProceedQuery(query string, q sqlparser.Querier, row []string) (data *Data, err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	q := sqlparser.NewQuery()
 	postfix, err := q.ParseToPostfix(query)
 	if err != nil {
 		return nil, fmt.Errorf("cant' proceed query %s", err)
 	}
 	var isValid bool
-	composed := r.composeRow(headers, row)
+	composed := r.composeRow(r.headers, row)
 	isValid, err = q.SelectFromRow(postfix, composed)
 	if err != nil {
 		return nil, fmt.Errorf("can't proceed query %s", err)

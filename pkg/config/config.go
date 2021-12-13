@@ -7,5 +7,6 @@ type Config interface {
 	GetPath() (path string)
 	// get commands from config
 	// GetOps() (ops Operation[] )
-	
+	// read config from file with path
+	ReadConfig(path string) (err error)
 }
