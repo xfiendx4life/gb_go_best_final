@@ -148,7 +148,8 @@ func (q *Query) SelectFromRow(postfix []string, row map[string]string) (res bool
 
 		} else {
 			var res string
-			b, err := stack.Pop()
+			var b string
+			b, err = stack.Pop()
 			if err != nil {
 				return false, fmt.Errorf("stack error while making select %s", err)
 			}
@@ -162,15 +163,15 @@ func (q *Query) SelectFromRow(postfix []string, row map[string]string) (res bool
 			}
 			// check if operation is comapration
 			if o.BasicOp != nil {
-				op, err := operations.OpsBuilder(a, b)
+				op, terr := operations.OpsBuilder(a, b)
 				if err != nil {
-					return false, fmt.Errorf("can't select row %s", err)
+					return false, fmt.Errorf("can't select row %s", terr)
 				}
 				res = strconv.FormatBool(o.BasicOp(op))
 			} else { // check if operation is logic
-				op, err := operations.LogicBuilder(b, a)
+				op, terr := operations.LogicBuilder(b, a)
 				if err != nil {
-					return false, fmt.Errorf("error while making select %s", err)
+					return false, fmt.Errorf("error while making select %s", terr)
 				}
 				res = strconv.FormatBool(o.LogicOp(op))
 			}

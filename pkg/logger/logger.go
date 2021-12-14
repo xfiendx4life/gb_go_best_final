@@ -2,6 +2,7 @@ package logger
 
 import (
 	"io"
+	"log"
 	"os"
 
 	"go.uber.org/zap"
@@ -11,9 +12,13 @@ import (
 func InitLogger(level *zapcore.Level, filelog string) *zap.SugaredLogger {
 	var output io.Writer
 	var encoder zapcore.Encoder
+	var err error
 	// choosing file or stderr
 	if filelog != "" {
-		output, _ = os.Create(filelog)                                     // we are going to use file as log output
+		output, err = os.Create(filelog)
+		if err != nil {
+			log.Printf("can't create logger file")
+		} // we are going to use file as log output
 		encoder = zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()) // using json for file
 	} else {
 		output = os.Stderr

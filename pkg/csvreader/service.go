@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"sync"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
@@ -93,7 +94,10 @@ func (r *Data) ProceedFullTable(source io.Reader, rawQuery string) (table Table,
 		}
 		wg.Add(1)
 		go func(row []string) {
-			r.ProceedQuery(rawQuery, q, row)
+			_, err = r.ProceedQuery(rawQuery, q, row)
+			if err != nil {
+				log.Printf("error while parsing row %s", err)
+			}
 			wg.Done()
 		}(row)
 	}

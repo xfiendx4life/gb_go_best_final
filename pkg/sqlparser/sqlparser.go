@@ -32,6 +32,3 @@ type Node struct {
 	Left  *Node
 	Right *Node
 }
-
-
-
