@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/operations"
+	"go.uber.org/zap"
 )
 
 //Searching index of the first appereance of target string -1 if not in string
@@ -136,13 +137,15 @@ func (q *Query) GetTableName() (tableName string) {
 
 // Checks if where clause returns true or false with current row
 // if types are different SelectFromRow works as if they are strings
-func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[string]string) (res bool, err error) {
+func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[string]string, z *zap.SugaredLogger) (res bool, err error) {
 	select {
 	case <-ctx.Done():
+		z.Errorf("done with context")
 		return false, fmt.Errorf("stopped by context")
 	default:
 		stack := NewStack(0)
 		ops := operations.InitOperations()
+		z.Debugf("starting parsing query from postfix form")
 		for _, item := range postfix {
 			if o, ok := ops[item]; !ok {
 				if value, ok := row[item]; ok {
@@ -156,6 +159,7 @@ func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[str
 				var b string
 				b, err = stack.Pop()
 				if err != nil {
+					z.Errorf("stack error while making select %s", err)
 					return false, fmt.Errorf("stack error while making select %s", err)
 				}
 				var a string
@@ -163,6 +167,7 @@ func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[str
 				if o.Binary {
 					a, err = stack.Pop()
 					if err != nil {
+						z.Errorf("stack error while making select %s", err)
 						return false, fmt.Errorf("stack error while making select %s", err)
 					}
 				}
@@ -170,12 +175,14 @@ func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[str
 				if o.BasicOp != nil {
 					op, terr := operations.OpsBuilder(a, b)
 					if err != nil {
+						z.Errorf("can't select row %s", terr)
 						return false, fmt.Errorf("can't select row %s", terr)
 					}
 					res = strconv.FormatBool(o.BasicOp(op))
 				} else { // check if operation is logic
 					op, terr := operations.LogicBuilder(b, a)
 					if err != nil {
+						z.Errorf("error while making select %s", terr)
 						return false, fmt.Errorf("error while making select %s", terr)
 					}
 					res = strconv.FormatBool(o.LogicOp(op))
@@ -185,10 +192,12 @@ func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[str
 			}
 		}
 		if stack.IsEmpty() || stack.Len() > 1 {
+			z.Errorf("not valid stack computation")
 			return false, fmt.Errorf("not valid stack computation")
 		}
 		res, err = strconv.ParseBool(stack.data[0])
 		if err != nil {
+			z.Errorf("can't parse bool %s", err)
 			return false, fmt.Errorf("can't parse bool %s", err)
 		}
 		return res, nil

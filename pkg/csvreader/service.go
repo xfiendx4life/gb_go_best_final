@@ -73,7 +73,7 @@ func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Queri
 		z.Debugf("query parsed to postfix form %v", postfix)
 		var isValid bool
 		composed := r.composeRow(r.headers, row)
-		isValid, err = q.SelectFromRow(ctx, postfix, composed)
+		isValid, err = q.SelectFromRow(ctx, postfix, composed, z)
 		if err != nil {
 			z.Errorf("can't proceed query %s", err)
 			return nil, fmt.Errorf("can't proceed query %s", err)

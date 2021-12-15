@@ -1,6 +1,10 @@
 package sqlparser
 
-import "context"
+import (
+	"context"
+
+	"go.uber.org/zap"
+)
 
 type Querier interface {
 	// Parses query from string to []commands,
@@ -11,7 +15,7 @@ type Querier interface {
 	// returns tablename
 	GetTableName() (tableName string)
 	// proceed query on row
-	SelectFromRow(ctx context.Context, postfix []string, row map[string]string) (result bool, err error)
+	SelectFromRow(ctx context.Context, postfix []string, row map[string]string, z *zap.SugaredLogger) (result bool, err error)
 }
 
 type WhereCondition struct {

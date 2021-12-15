@@ -7,9 +7,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 	ops "github.com/xfiendx4life/gb_go_best_final/pkg/operations"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+func newLogger() *zap.SugaredLogger {
+	level := zapcore.DebugLevel
+	return logger.InitLogger(&level, "")
+}
 
 func TestNewQueryNoWhere(t *testing.T) {
 	q := sqlparser.NewQuery()
@@ -106,7 +114,7 @@ func TestSelectFromRow(t *testing.T) {
 		"c": "8",
 	}
 	ctx := context.Background()
-	res, err := q.SelectFromRow(ctx, postfix, row)
+	res, err := q.SelectFromRow(ctx, postfix, row, newLogger())
 	require.Nil(t, err)
 	require.True(t, res)
 }
@@ -120,7 +128,7 @@ func TestSelectFromRowEmpty(t *testing.T) {
 		"c": "8",
 	}
 	ctx := context.Background()
-	_, err := q.SelectFromRow(ctx, postfix, row)
+	_, err := q.SelectFromRow(ctx, postfix, row, newLogger())
 	require.NotNil(t, err)
 }
 
@@ -132,7 +140,7 @@ func TestSelectFromRowWrongTypes(t *testing.T) {
 		"c": "strng",
 	}
 	ctx := context.Background()
-	res, err := q.SelectFromRow(ctx, postfix, row)
+	res, err := q.SelectFromRow(ctx, postfix, row, newLogger())
 	require.Nil(t, err)
 	require.True(t, res)
 }
