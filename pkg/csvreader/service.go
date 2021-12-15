@@ -5,10 +5,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"sync"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
+	"go.uber.org/zap"
 )
 
 func NewData() *Data {
@@ -57,24 +57,29 @@ func (r *Data) composeRow(headers []string, row []string) (composedRow map[strin
 	return composedRow
 }
 
-func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Querier, row []string) (data Table, err error) {
+func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Querier, row []string, z *zap.SugaredLogger) (data Table, err error) {
 	select {
 	case <-ctx.Done():
+		z.Errorf("ProceedQuery ended with context")
 		return nil, fmt.Errorf("done with context")
 	default:
 		r.mu.Lock()
 		defer r.mu.Unlock()
 		postfix, err := q.ParseToPostfix(query)
 		if err != nil {
+			z.Errorf("can't parse to postfix %s", err)
 			return nil, fmt.Errorf("cant' proceed query %s", err)
 		}
+		z.Debugf("query parsed to postfix form %v", postfix)
 		var isValid bool
 		composed := r.composeRow(r.headers, row)
 		isValid, err = q.SelectFromRow(ctx, postfix, composed)
 		if err != nil {
+			z.Errorf("can't proceed query %s", err)
 			return nil, fmt.Errorf("can't proceed query %s", err)
 		}
 		if isValid {
+			z.Debugf("row %v is valid for query", row)
 			for k, v := range composed {
 				r.Table[k] = append(r.Table[k], v)
 			}
@@ -84,15 +89,17 @@ func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Queri
 	}
 }
 
-func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string) (table Table, err error) {
+func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string, z *zap.SugaredLogger) (table Table, err error) {
 	select {
 	case <-ctx.Done():
+		z.Errorf("ProceedTable ended with context")
 		return nil, fmt.Errorf("done with context")
 	default:
 		_, err = r.ReadHeaders(source)
 		if err != nil {
 			return nil, fmt.Errorf("can't read headers %s", err)
 		}
+		z.Debugf("headers of the table are %v", r.headers)
 		q := sqlparser.NewQuery()
 		var wg sync.WaitGroup
 		for {
@@ -100,13 +107,14 @@ func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery 
 			if err == io.EOF {
 				break
 			} else if err != nil {
+				z.Errorf("error while parsing table %s", err)
 				return nil, fmt.Errorf("can't parse table %s", err)
 			}
 			wg.Add(1)
 			go func(row []string) {
-				_, err = r.ProceedQuery(ctx, rawQuery, q, row)
+				_, err = r.ProceedQuery(ctx, rawQuery, q, row, z)
 				if err != nil {
-					log.Printf("error while parsing row %s", err)
+					z.Warnf("error while parsing row %s", err)
 				}
 				wg.Done()
 			}(row)

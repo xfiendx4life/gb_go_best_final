@@ -9,9 +9,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
 	cs "github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+func newLogger() *zap.SugaredLogger {
+	level := zapcore.DebugLevel
+	return logger.InitLogger(&level, "")
+}
 
 func TestReadLine(t *testing.T) {
 	r := cs.NewData()
@@ -36,7 +45,7 @@ func TestProceedData(t *testing.T) {
 	row := []string{"5", "8"}
 	q := sqlparser.NewQuery()
 	ctx := context.Background()
-	r1, err := r.ProceedQuery(ctx, query, q, row)
+	r1, err := r.ProceedQuery(ctx, query, q, row, newLogger())
 	require.Nil(t, err)
 	require.Equal(t, "5", r1.GetTable()["a"][0])
 }
@@ -53,7 +62,7 @@ func TestProceedConcurrentData(t *testing.T) {
 	for i, header := range headers {
 		r.ReadHeaders(strings.NewReader(header))
 		go func(row []string) {
-			r.ProceedQuery(ctx, query, q, row)
+			r.ProceedQuery(ctx, query, q, row, newLogger())
 			wg.Done()
 		}(rows[i])
 	}
@@ -69,13 +78,12 @@ func TestProceedFullTable(t *testing.T) {
 	query := "SELECT * FROM tablename where a > 4 and not c < 5"
 	r := cs.NewData()
 	ctx := context.Background()
-	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query)
+	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger())
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(tab.GetTable()["a"]))
 	assert.Equal(t, []string{"5", "5"}, tab.GetTable()["a"])
 }
 
-// TODO: More tests
 func TestProceedFullTableOneOfTwo(t *testing.T) {
 	source := `a,c
 5,8
@@ -84,7 +92,7 @@ func TestProceedFullTableOneOfTwo(t *testing.T) {
 	query := "SELECT * FROM tablename where a >= 4 and not c < 5"
 	r := cs.NewData()
 	ctx := context.Background()
-	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query)
+	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger())
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(tab.GetTable()["a"]))
 	assert.Equal(t, []string{"8"}, tab.GetTable()["c"])
@@ -102,7 +110,14 @@ func TestProceedFullTableWithContext(t *testing.T) {
 		cancel()
 	}()
 	time.Sleep(1 * time.Second)
-	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query)
+	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger())
 	assert.NotNil(t, err)
 	assert.Nil(t, tab)
+}
+
+// TODO: More tests
+func TestProcessQueryError(t *testing.T) {
+	q := "some bullshit"
+	_, err := csvreader.NewData().ProceedQuery(context.Background(), q, sqlparser.NewQuery(), []string{"1", "2", "3"}, newLogger())
+	assert.NotNil(t, err)
 }
