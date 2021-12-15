@@ -1,5 +1,7 @@
 package sqlparser
 
+import "context"
+
 type Querier interface {
 	// Parses query from string to []commands,
 	// which is postfix form of query
@@ -9,7 +11,7 @@ type Querier interface {
 	// returns tablename
 	GetTableName() (tableName string)
 	// proceed query on row
-	SelectFromRow(postfix []string, row map[string]string) (result bool, err error)
+	SelectFromRow(ctx context.Context, postfix []string, row map[string]string) (result bool, err error)
 }
 
 type WhereCondition struct {

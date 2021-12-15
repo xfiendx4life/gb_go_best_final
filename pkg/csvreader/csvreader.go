@@ -1,6 +1,7 @@
 package csvreader
 
 import (
+	"context"
 	"encoding/csv"
 	"io"
 	"sync"
@@ -21,9 +22,9 @@ type Table interface {
 	// parses whole command sequence
 	// returns the same structure ready to parse
 	//another query
-	ProceedQuery(rawQuery string, query sqlparser.Querier, row []string) (Table, error)
+	ProceedQuery(ctx context.Context, rawQuery string, query sqlparser.Querier, row []string) (Table, error)
 	// proceeds select query to the whole table concurrently
-	ProceedFullTable(source io.Reader, rawQuery string) (table Table, err error)
+	ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string) (table Table, err error)
 	GetTable() map[string][]string
 }
 

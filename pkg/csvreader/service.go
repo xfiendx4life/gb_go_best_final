@@ -1,6 +1,7 @@
 package csvreader
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -56,51 +57,61 @@ func (r *Data) composeRow(headers []string, row []string) (composedRow map[strin
 	return composedRow
 }
 
-func (r *Data) ProceedQuery(query string, q sqlparser.Querier, row []string) (data Table, err error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	postfix, err := q.ParseToPostfix(query)
-	if err != nil {
-		return nil, fmt.Errorf("cant' proceed query %s", err)
-	}
-	var isValid bool
-	composed := r.composeRow(r.headers, row)
-	isValid, err = q.SelectFromRow(postfix, composed)
-	if err != nil {
-		return nil, fmt.Errorf("can't proceed query %s", err)
-	}
-	if isValid {
-		for k, v := range composed {
-			r.Table[k] = append(r.Table[k], v)
+func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Querier, row []string) (data Table, err error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("done with context")
+	default:
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		postfix, err := q.ParseToPostfix(query)
+		if err != nil {
+			return nil, fmt.Errorf("cant' proceed query %s", err)
 		}
+		var isValid bool
+		composed := r.composeRow(r.headers, row)
+		isValid, err = q.SelectFromRow(ctx, postfix, composed)
+		if err != nil {
+			return nil, fmt.Errorf("can't proceed query %s", err)
+		}
+		if isValid {
+			for k, v := range composed {
+				r.Table[k] = append(r.Table[k], v)
+			}
+		}
+		data = r
+		return data, nil
 	}
-	data = r
-	return data, nil
 }
 
-func (r *Data) ProceedFullTable(source io.Reader, rawQuery string) (table Table, err error) {
-	_, err = r.ReadHeaders(source)
-	if err != nil {
-		return nil, fmt.Errorf("can't read headers %s", err)
-	}
-	q := sqlparser.NewQuery()
-	var wg sync.WaitGroup
-	for {
-		row, err := r.ReadRow(source)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, fmt.Errorf("can't parse table %s", err)
+func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string) (table Table, err error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("done with context")
+	default:
+		_, err = r.ReadHeaders(source)
+		if err != nil {
+			return nil, fmt.Errorf("can't read headers %s", err)
 		}
-		wg.Add(1)
-		go func(row []string) {
-			_, err = r.ProceedQuery(rawQuery, q, row)
-			if err != nil {
-				log.Printf("error while parsing row %s", err)
+		q := sqlparser.NewQuery()
+		var wg sync.WaitGroup
+		for {
+			row, err := r.ReadRow(source)
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return nil, fmt.Errorf("can't parse table %s", err)
 			}
-			wg.Done()
-		}(row)
+			wg.Add(1)
+			go func(row []string) {
+				_, err = r.ProceedQuery(ctx, rawQuery, q, row)
+				if err != nil {
+					log.Printf("error while parsing row %s", err)
+				}
+				wg.Done()
+			}(row)
+		}
+		wg.Wait()
+		return r, nil
 	}
-	wg.Wait()
-	return r, nil
 }

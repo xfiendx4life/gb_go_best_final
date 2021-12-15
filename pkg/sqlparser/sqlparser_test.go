@@ -1,6 +1,7 @@
 package sqlparser_test
 
 import (
+	"context"
 	"log"
 	"testing"
 
@@ -104,7 +105,8 @@ func TestSelectFromRow(t *testing.T) {
 		"a": "5",
 		"c": "8",
 	}
-	res, err := q.SelectFromRow(postfix, row)
+	ctx := context.Background()
+	res, err := q.SelectFromRow(ctx, postfix, row)
 	require.Nil(t, err)
 	require.True(t, res)
 }
@@ -117,7 +119,8 @@ func TestSelectFromRowEmpty(t *testing.T) {
 		"a": "5",
 		"c": "8",
 	}
-	_, err := q.SelectFromRow(postfix, row)
+	ctx := context.Background()
+	_, err := q.SelectFromRow(ctx, postfix, row)
 	require.NotNil(t, err)
 }
 
@@ -128,7 +131,8 @@ func TestSelectFromRowWrongTypes(t *testing.T) {
 		"a": "string",
 		"c": "strng",
 	}
-	res, err := q.SelectFromRow(postfix, row)
+	ctx := context.Background()
+	res, err := q.SelectFromRow(ctx, postfix, row)
 	require.Nil(t, err)
 	require.True(t, res)
 }

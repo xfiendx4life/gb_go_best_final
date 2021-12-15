@@ -1,4 +1,4 @@
 test:
-	go test -v ./... -coverprofile=coverage.out
+	go test ./... -coverprofile=coverage.out
 check:
 	golangci-lint run
