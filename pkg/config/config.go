@@ -1,12 +1,21 @@
 package config
 
+import (
+	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	// _ "gopkg.in/yaml.v3"
+)
+
 type Config interface {
-	// init config from source env or file
-	InitConfig(source string) (err error)
-	// returns path to csv file
-	GetPath() (path string)
-	// get commands from config
-	// GetOps() (ops Operation[] )
 	// read config from file with path
-	ReadConfig(path string) (err error)
+	ReadConfig(data []byte, z *zap.SugaredLogger) (err error)
+}
+
+type ConfYML struct {
+	Timeout    time.Duration `yaml:"timeout"`
+	LogLevel   zapcore.Level `yaml:"loglevel"`
+	LogFile    string        `yaml:"logfile"`
+	TargetFile string        `yaml:"targetfile"`
 }
