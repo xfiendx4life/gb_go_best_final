@@ -19,7 +19,7 @@ type Table interface {
 	// Reads headers from
 	ReadHeaders(source io.Reader) (headers []string, err error)
 	// Reads any line
-	ReadRow(source io.Reader) (row []string, err error)
+	ReadRow(source io.Reader, sep rune) (row []string, err error)
 	// parses whole command sequence
 	// returns the same structure ready to parse
 	//another query

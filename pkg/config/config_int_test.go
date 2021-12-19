@@ -35,6 +35,22 @@ targetfile: target.csv`)
 	assert.Equal(t, data, res)
 }
 
+func TestReadFromFileSep(t *testing.T) {
+	data := []byte(`timeout: 2
+loglevel: 5
+logfile: access.txt
+targetfile: target.csv
+separator: ","
+`)
+	createTestFile(data)
+	res, err := config.ReadFromFile("test.yaml")
+	assert.Nil(t, err)
+	c := config.InitConfig()
+	err = c.ReadConfig(res)
+	os.Remove("test.yaml")
+	assert.Nil(t, err)
+	assert.Equal(t, ',', c.GetSeparator())
+}
 func TestReadFromFileError(t *testing.T) {
 	_, err := config.ReadFromFile("test.yaml")
 	os.Remove("test.yaml")

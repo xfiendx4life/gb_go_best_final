@@ -27,12 +27,11 @@ func (r *Data) GetTable() map[string][]string {
 	return r.Table
 }
 
-func (r *Data) ReadRow(source io.Reader) (row []string, err error) {
+func (r *Data) ReadRow(source io.Reader, sep rune) (row []string, err error) {
 	if r.reader == nil {
 		r.reader = csv.NewReader(source)
 	}
-	// TODO: Read comma from config
-	r.reader.Comma = ','
+	r.reader.Comma = sep
 	row, err = r.reader.Read()
 	if err != nil {
 		return nil, err
@@ -41,7 +40,7 @@ func (r *Data) ReadRow(source io.Reader) (row []string, err error) {
 }
 
 func (r *Data) ReadHeaders(source io.Reader) (headers []string, err error) {
-	headers, err = r.ReadRow(source)
+	headers, err = r.ReadRow(source, ',')
 	if err != nil {
 		return nil, fmt.Errorf("can't rad headers %s", err)
 	}
@@ -103,7 +102,7 @@ func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery 
 		q := sqlparser.NewQuery()
 		var wg sync.WaitGroup
 		for {
-			row, err := r.ReadRow(source)
+			row, err := r.ReadRow(source, ',')
 			if err == io.EOF {
 				break
 			} else if err != nil {

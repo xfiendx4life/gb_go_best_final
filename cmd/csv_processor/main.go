@@ -9,7 +9,6 @@ import (
 	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 )
 
-// TODO: Think about config file for logger too
 func main() {
 	var configFile string
 	flag.StringVar(&configFile, "config", "../../config.yaml", "use to set config destination")

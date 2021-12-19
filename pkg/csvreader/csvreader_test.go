@@ -25,7 +25,7 @@ func newLogger() *zap.SugaredLogger {
 func TestReadLine(t *testing.T) {
 	r := cs.NewData()
 	rdr := strings.NewReader("iso_code,continent,location,date,total_cases")
-	row, err := r.ReadRow(rdr)
+	row, err := r.ReadRow(rdr, ',')
 	assert.Nil(t, err)
 	assert.Equal(t, "iso_code", row[0])
 }
