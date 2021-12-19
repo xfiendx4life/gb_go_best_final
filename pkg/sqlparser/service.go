@@ -51,6 +51,18 @@ func NewQuery() *Query {
 	}
 }
 
+func deleteComas(data []string) []string {
+	res := make([]string, len(data))
+	for i, item := range data {
+		if item[len(item)-1] == ',' {
+			res[i] = item[:len(item)-1]
+		} else {
+			res[i] = item
+		}
+	}
+	return res
+}
+
 // split raw query to condition and cols after validation
 func (q *Query) SplitToConditionAndCols(rawQuery string) error {
 	splitted, err := normalizeValidateQuery(rawQuery)
@@ -61,7 +73,7 @@ func (q *Query) SplitToConditionAndCols(rawQuery string) error {
 	if ind == -1 {
 		return fmt.Errorf("error parsing query: no table chosen")
 	}
-	q.columns = splitted[1:ind]
+	q.columns = deleteComas(splitted[1:ind])
 	q.tableName = strings.ToLower(splitted[ind+1])
 	ind = getIndexOf(splitted, "where")
 	if ind == -1 {
