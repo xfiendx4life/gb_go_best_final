@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewData() *Data {
+func NewData() Table {
 	return &Data{
 		headers:     make([]string, 0),
 		currentLine: make([]string, 0),
@@ -56,6 +56,18 @@ func (r *Data) composeRow(headers []string, row []string) (composedRow map[strin
 	return composedRow
 }
 
+func checkSlice(target string, data []string) bool {
+	if data[0] == "*" {
+		return true
+	}
+	for _, item := range data {
+		if item == target {
+			return true
+		}
+	}
+	return false
+}
+
 func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Querier, row []string, z *zap.SugaredLogger) (data Table, err error) {
 	select {
 	case <-ctx.Done():
@@ -80,7 +92,9 @@ func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Queri
 		if isValid {
 			z.Debugf("row %v is valid for query", row)
 			for k, v := range composed {
-				r.Table[k] = append(r.Table[k], v)
+				if checkSlice(k, q.GetResultCols()) {
+					r.Table[k] = append(r.Table[k], v)
+				}
 			}
 		}
 		data = r

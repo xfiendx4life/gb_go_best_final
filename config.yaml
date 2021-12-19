@@ -1,5 +1,5 @@
-timeout: 2
-loglevel: 5
+timeout: 15
+loglevel: 0
 logfile: 
-targetfile: target.csv
+targetfile: ../../small.csv
 separator: ","

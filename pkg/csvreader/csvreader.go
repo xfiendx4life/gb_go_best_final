@@ -27,6 +27,7 @@ type Table interface {
 	// proceeds select query to the whole table concurrently
 	ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string, z *zap.SugaredLogger) (table Table, err error)
 	GetTable() map[string][]string
+	GetHeaders() []string
 }
 
 // rawData of csv file, where key is header of table and key is a slice of rows

@@ -9,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
 	cs "github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
@@ -67,7 +66,7 @@ func TestProceedConcurrentData(t *testing.T) {
 		}(rows[i])
 	}
 	wg.Wait()
-	assert.Equal(t, 2, len(r.Table["a"]))
+	assert.Equal(t, 2, len(r.GetTable()["a"]))
 }
 
 func TestProceedFullTable(t *testing.T) {
@@ -118,6 +117,27 @@ func TestProceedFullTableWithContext(t *testing.T) {
 // TODO: More tests
 func TestProcessQueryError(t *testing.T) {
 	q := "some bullshit"
-	_, err := csvreader.NewData().ProceedQuery(context.Background(), q, sqlparser.NewQuery(), []string{"1", "2", "3"}, newLogger())
+	_, err := cs.NewData().ProceedQuery(context.Background(), q, sqlparser.NewQuery(), []string{"1", "2", "3"}, newLogger())
 	assert.NotNil(t, err)
+}
+
+func TestGetNotAllCols(t *testing.T) {
+	r := cs.NewData()
+	query := "SELECT a FROM tablename where a > 4 and not c < 5"
+	headers := []string{"a,c", "a,c"}
+	rows := [][]string{{"5", "8"}, {"6", "10"}}
+	var wg sync.WaitGroup
+	ctx := context.Background()
+	q := sqlparser.NewQuery()
+	wg.Add(2)
+	for i, header := range headers {
+		r.ReadHeaders(strings.NewReader(header))
+		go func(row []string) {
+			r.ProceedQuery(ctx, query, q, row, newLogger())
+			wg.Done()
+		}(rows[i])
+	}
+	wg.Wait()
+	assert.Equal(t, 2, len(r.GetTable()["a"]))
+	assert.Nil(t, r.GetTable()["c"])
 }
