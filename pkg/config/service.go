@@ -24,7 +24,7 @@ func ReadFromFile(path string) (data []byte, err error) {
 func (conf *ConfYML) ReadConfig(data []byte) (err error) {
 	fakestruct := struct {
 		Timeout    int    `yaml:"timeout"`
-		LogLevel   uint8  `yaml:"loglevel"`
+		LogLevel   int8   `yaml:"loglevel"`
 		LogFile    string `yaml:"logfile"`
 		TargetFile string `yaml:"targetfile"`
 		Separator  string `yaml:"separator"`
