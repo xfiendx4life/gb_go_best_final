@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
@@ -61,7 +62,7 @@ func checkSlice(target string, data []string) bool {
 		return true
 	}
 	for _, item := range data {
-		if item == target {
+		if strings.HasPrefix(item, target) {
 			return true
 		}
 	}
