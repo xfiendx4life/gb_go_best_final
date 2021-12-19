@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/consolewriter"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 	"go.uber.org/zap"
@@ -72,7 +73,7 @@ func main() {
 	case err := <-errChan:
 		z.Errorf("error while processing table: %s", err)
 	case res := <-resChan:
-		fmt.Printf("%#v\n", res.GetTable())
+		consolewriter.NewConsoleWriter().Write(res)
 	}
 
 }
