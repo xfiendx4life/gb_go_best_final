@@ -58,7 +58,7 @@ func (r *Data) composeRow(headers []string, row []string) (composedRow map[strin
 }
 
 func checkSlice(target string, data []string) bool {
-	if data[0] == "*" {
+	if len(data) == 0 || data[0] == "*" {
 		return true
 	}
 	for _, item := range data {
@@ -69,7 +69,7 @@ func checkSlice(target string, data []string) bool {
 	return false
 }
 
-func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Querier, row []string, z *zap.SugaredLogger) (data Table, err error) {
+func (r *Data) ProceedQuery(ctx context.Context, q sqlparser.Querier, row []string, postfix []string, z *zap.SugaredLogger) (data Table, err error) {
 	select {
 	case <-ctx.Done():
 		z.Errorf("ProceedQuery ended with context")
@@ -77,18 +77,16 @@ func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Queri
 	default:
 		r.mu.Lock()
 		defer r.mu.Unlock()
-		postfix, err := q.ParseToPostfix(query)
-		if err != nil {
-			z.Errorf("can't parse to postfix %s", err)
-			return nil, fmt.Errorf("cant' proceed query %s", err)
-		}
-		z.Debugf("query parsed to postfix form %v", postfix)
 		var isValid bool
 		composed := r.composeRow(r.headers, row)
-		isValid, err = q.SelectFromRow(ctx, postfix, composed, z)
-		if err != nil {
-			z.Errorf("can't proceed query %s", err)
-			return nil, fmt.Errorf("can't proceed query %s", err)
+		if len(postfix) != 0 {
+			isValid, err = q.SelectFromRow(ctx, postfix, composed, z)
+			if err != nil {
+				z.Errorf("can't proceed query %s", err)
+				return nil, fmt.Errorf("can't proceed query %s", err)
+			}
+		} else {
+			isValid = true
 		}
 		if isValid {
 			z.Debugf("row %v is valid for query", row)
@@ -116,6 +114,12 @@ func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery 
 		}
 		z.Debugf("headers of the table are %v", r.headers)
 		q := sqlparser.NewQuery()
+		postfix, err := q.ParseToPostfix(rawQuery)
+		if err != nil {
+			z.Errorf("can't parse to postfix %s", err)
+			errChan <- fmt.Errorf("cant' proceed query %s", err)
+		}
+		z.Debugf("query parsed to postfix form %v", postfix)
 		var wg sync.WaitGroup
 		for {
 			row, err := r.ReadRow(source, ',')
@@ -128,7 +132,7 @@ func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery 
 			}
 			wg.Add(1)
 			go func(row []string) {
-				_, err = r.ProceedQuery(ctx, rawQuery, q, row, z)
+				_, err = r.ProceedQuery(ctx, q, row, postfix, z)
 				if err != nil {
 					z.Warnf("error while parsing row %s", err)
 				}

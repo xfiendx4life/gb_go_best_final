@@ -2,7 +2,6 @@ package sqlparser_test
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +19,7 @@ func newLogger() *zap.SugaredLogger {
 }
 
 func TestNewQueryNoWhere(t *testing.T) {
-	q := sqlparser.NewQuery()
+	q := &sqlparser.Query{}
 	err := q.SplitToConditionAndCols("SELECT * from students")
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.GetTableName(), "students")
@@ -28,7 +27,7 @@ func TestNewQueryNoWhere(t *testing.T) {
 }
 
 func TestNewQueryWithWhere(t *testing.T) {
-	q := sqlparser.NewQuery()
+	q := &sqlparser.Query{}
 	err := q.SplitToConditionAndCols("SELECT * from students WHERE name =   'Jane' and lastname = 'Doe'")
 	assert.Nil(t, err, "should be nil")
 	assert.Equal(t, q.GetTableName(), "students")
@@ -36,13 +35,13 @@ func TestNewQueryWithWhere(t *testing.T) {
 }
 
 func TestNewQueryWithoutSelect(t *testing.T) {
-	q := sqlparser.NewQuery()
+	q := &sqlparser.Query{}
 	err := q.SplitToConditionAndCols("* from students WHERE name =   'Jane' and lastname = 'Doe'")
 	assert.NotNil(t, err)
 }
 
 func TestNewQueryWithoutFrom(t *testing.T) {
-	q := sqlparser.NewQuery()
+	q := &sqlparser.Query{}
 	err := q.SplitToConditionAndCols("SELECT * students WHERE name =   'Jane' and lastname = 'Doe'")
 	assert.Nil(t, q.Condition.RawCondition, "should be nil")
 	assert.NotNil(t, err)
@@ -80,7 +79,6 @@ func TestParseRawQuery(t *testing.T) {
 	res, err := q.ParseToPostfix("SELECT * FROM tablename where a > b and not c < d")
 	assert.Nil(t, err)
 	assert.NotEmpty(t, res)
-	log.Print(res)
 }
 
 func TestStackIsEmpty(t *testing.T) {
@@ -119,7 +117,6 @@ func TestSelectFromRow(t *testing.T) {
 	require.True(t, res)
 }
 
-//TODO: more tests before continue
 func TestSelectFromRowEmpty(t *testing.T) {
 	q := sqlparser.NewQuery()
 	postfix := []string{}

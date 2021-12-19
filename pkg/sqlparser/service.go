@@ -45,7 +45,7 @@ func normalizeValidateQuery(query string) ([]string, error) {
 }
 
 // Func to create query and separate cols from condition
-func NewQuery() *Query {
+func NewQuery() Querier {
 	return &Query{
 		columns: make([]string, 0),
 	}
@@ -92,11 +92,15 @@ func (q *Query) ParseToPostfix(rawQuery string) ([]string, error) {
 	}
 	root := Node{}
 	ops := operations.InitOperations()
-	root.ParseQueryToTree(q.Condition.RawCondition, ops)
-	q.Condition.tree = &root
-	postfix := make([]string, 0)
-	root.postorder(&postfix)
-	return postfix, nil
+	if q.Condition.RawCondition != nil {
+		root.ParseQueryToTree(q.Condition.RawCondition, ops)
+		q.Condition.tree = &root
+		postfix := make([]string, 0)
+		root.postorder(&postfix)
+		return postfix, nil
+	}
+	return make([]string, 0), nil
+
 }
 
 // find index of operation with the highest priority
@@ -165,7 +169,6 @@ func (q *Query) SelectFromRow(ctx context.Context, postfix []string, row map[str
 				} else {
 					stack.Push(item)
 				}
-
 			} else {
 				var res string
 				var b string
