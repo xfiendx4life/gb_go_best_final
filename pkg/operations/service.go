@@ -3,6 +3,7 @@ package operations
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 //TODO: change this func for reading from config
@@ -61,7 +62,7 @@ func OpsBuilder(op1, op2 string) (basicOps, error) {
 			return nil, fmt.Errorf("can't compare numeric and not numeric types")
 		}
 	} else {
-		return &stringOpers{op1, op2}, nil
+		return &stringOpers{strings.ToLower(op1), strings.ToLower(op2)}, nil
 	}
 }
 

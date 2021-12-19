@@ -25,7 +25,7 @@ type Table interface {
 	//another query
 	ProceedQuery(ctx context.Context, rawQuery string, query sqlparser.Querier, row []string, z *zap.SugaredLogger) (Table, error)
 	// proceeds select query to the whole table concurrently
-	ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string, z *zap.SugaredLogger) (table Table, err error)
+	ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string, z *zap.SugaredLogger, resChan chan Table, errChan chan error)
 	GetTable() map[string][]string
 	GetHeaders() []string
 }

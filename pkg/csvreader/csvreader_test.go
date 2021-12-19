@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -77,10 +78,19 @@ func TestProceedFullTable(t *testing.T) {
 	query := "SELECT * FROM tablename where a > 4 and not c < 5"
 	r := cs.NewData()
 	ctx := context.Background()
-	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger())
-	assert.Nil(t, err)
-	assert.Equal(t, 2, len(tab.GetTable()["a"]))
-	assert.Equal(t, []string{"5", "5"}, tab.GetTable()["a"])
+	resChan := make(chan cs.Table)
+	errChan := make(chan error)
+	go r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger(), resChan, errChan)
+	select {
+	case <-ctx.Done():
+		assert.Nil(t, 0)
+	case err := <-errChan:
+		assert.Nil(t, err)
+	case tab := <-resChan:
+		assert.Equal(t, 2, len(tab.GetTable()["a"]))
+		assert.Equal(t, []string{"5", "5"}, tab.GetTable()["a"])
+	}
+
 }
 
 func TestProceedFullTableOneOfTwo(t *testing.T) {
@@ -91,10 +101,19 @@ func TestProceedFullTableOneOfTwo(t *testing.T) {
 	query := "SELECT * FROM tablename where a >= 4 and not c < 5"
 	r := cs.NewData()
 	ctx := context.Background()
-	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger())
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(tab.GetTable()["a"]))
-	assert.Equal(t, []string{"8"}, tab.GetTable()["c"])
+	resChan := make(chan cs.Table)
+	errChan := make(chan error)
+	go r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger(), resChan, errChan)
+	select {
+	case <-ctx.Done():
+		assert.Nil(t, 0)
+	case err := <-errChan:
+		assert.Nil(t, err)
+	case tab := <-resChan:
+		assert.Equal(t, 1, len(tab.GetTable()["a"]))
+		assert.Equal(t, []string{"8"}, tab.GetTable()["c"])
+	}
+
 }
 
 func TestProceedFullTableWithContext(t *testing.T) {
@@ -105,13 +124,12 @@ func TestProceedFullTableWithContext(t *testing.T) {
 	query := "SELECT * FROM tablename where a >= 4 and not c < 5"
 	r := cs.NewData()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*1))
-	go func() {
-		cancel()
-	}()
 	time.Sleep(1 * time.Second)
-	tab, err := r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger())
-	assert.NotNil(t, err)
-	assert.Nil(t, tab)
+	resChan := make(chan cs.Table)
+	errChan := make(chan error)
+	go r.ProceedFullTable(ctx, strings.NewReader(source), query, newLogger(), resChan, errChan)
+	assert.NotNil(t, <-ctx.Done())
+	cancel()
 }
 
 // TODO: More tests

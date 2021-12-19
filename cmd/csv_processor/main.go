@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"flag"
@@ -26,12 +27,19 @@ func openSource(path string, z *zap.SugaredLogger) (io.Reader, error) {
 	return bytes.NewReader(file), nil
 }
 
+func readQuery() string {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	return scanner.Text()
+}
+
 func main() {
 	var configFile string
-	var query string
 	flag.StringVar(&configFile, "config", "../../config.yaml", "use to set config destination")
-	flag.StringVar(&query, "query", "", "use flag to set query")
+	// flag.StringVar(&query, "query", "", "use flag to set query")
 	flag.Parse()
+	fmt.Println("Write your query")
+	query := readQuery()
 	conf := config.InitConfig()
 	confFile, err := os.ReadFile(configFile)
 	if err != nil {
@@ -55,9 +63,17 @@ func main() {
 	if query == "" {
 		z.Fatal("query not set")
 	}
-	table, err = table.ProceedFullTable(ctx, data, query, z)
-	if err != nil {
-		z.Fatalf("can't proceed query: %s", err)
+	resChan := make(chan csvreader.Table)
+	errChan := make(chan error)
+	go table.ProceedFullTable(ctx, data, query, z, resChan, errChan)
+	select {
+	case <-ctx.Done():
+		z.Error("Done with context")
+		cancel()
+	case err := <-errChan:
+		z.Errorf("error while processing table: %s", err)
+	case res := <-resChan:
+		fmt.Printf("%#v\n", res.GetTable())
 	}
-	fmt.Printf("%#v\n", table.GetTable())
+
 }

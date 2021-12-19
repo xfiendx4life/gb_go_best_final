@@ -103,15 +103,16 @@ func (r *Data) ProceedQuery(ctx context.Context, query string, q sqlparser.Queri
 	}
 }
 
-func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string, z *zap.SugaredLogger) (table Table, err error) {
+func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery string, z *zap.SugaredLogger, resChan chan Table, errChan chan error) {
 	select {
 	case <-ctx.Done():
 		z.Errorf("ProceedTable ended with context")
-		return nil, fmt.Errorf("done with context")
+		errChan <- fmt.Errorf("done with context")
+		return
 	default:
-		_, err = r.ReadHeaders(source)
+		_, err := r.ReadHeaders(source)
 		if err != nil {
-			return nil, fmt.Errorf("can't read headers %s", err)
+			errChan <- fmt.Errorf("can't read headers %s", err)
 		}
 		z.Debugf("headers of the table are %v", r.headers)
 		q := sqlparser.NewQuery()
@@ -122,7 +123,8 @@ func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery 
 				break
 			} else if err != nil {
 				z.Errorf("error while parsing table %s", err)
-				return nil, fmt.Errorf("can't parse table %s", err)
+				errChan <- fmt.Errorf("can't parse table %s", err)
+				return
 			}
 			wg.Add(1)
 			go func(row []string) {
@@ -134,6 +136,6 @@ func (r *Data) ProceedFullTable(ctx context.Context, source io.Reader, rawQuery 
 			}(row)
 		}
 		wg.Wait()
-		return r, nil
+		resChan <- r
 	}
 }
