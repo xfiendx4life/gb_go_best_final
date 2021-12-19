@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
@@ -42,7 +44,9 @@ func main() {
 	z := logger.InitLogger(&conf.LogLevel, conf.LogFile)
 	z.Info("logger initiated")
 	table := csvreader.NewData()
-	ctx, cancel := context.WithTimeout(context.Background(), conf.Timeout)
+	ctx, timeoutCancel := context.WithTimeout(context.Background(), conf.Timeout)
+	_ = timeoutCancel
+	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	_ = cancel
 	data, err := openSource(conf.TargetFile, z)
 	if err != nil {
