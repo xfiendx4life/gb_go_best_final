@@ -1,0 +1,4 @@
+timeout: 2
+loglevel: 5
+logfile: 
+targetfile: target.csv

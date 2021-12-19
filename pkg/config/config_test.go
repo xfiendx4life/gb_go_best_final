@@ -6,15 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
-
-func newLogger() *zap.SugaredLogger {
-	level := zapcore.DebugLevel
-	return logger.InitLogger(&level, "")
-}
 
 func TestReadConfig(t *testing.T) {
 	c := config.InitConfig()
@@ -22,8 +15,7 @@ func TestReadConfig(t *testing.T) {
 loglevel: 5
 logfile: access.txt
 targetfile: target.csv`
-	lgr := newLogger()
-	err := c.ReadConfig([]byte(data), lgr)
+	err := c.ReadConfig([]byte(data))
 	assert.Nil(t, err)
 	assert.Equal(t, time.Duration(2)*time.Second, c.Timeout)
 	assert.Equal(t, zapcore.FatalLevel, c.LogLevel)
@@ -34,7 +26,6 @@ targetfile: target.csv`
 func TestReadConfigError(t *testing.T) {
 	c := config.InitConfig()
 	data := `some text`
-	lgr := newLogger()
-	err := c.ReadConfig([]byte(data), lgr)
+	err := c.ReadConfig([]byte(data))
 	assert.NotNil(t, err)
 }

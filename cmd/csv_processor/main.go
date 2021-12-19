@@ -2,15 +2,27 @@ package main
 
 import (
 	"flag"
+	"log"
+	"os"
 
-	"go.uber.org/zap"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
+	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 )
 
 // TODO: Think about config file for logger too
 func main() {
-	logLevel := zap.LevelFlag("loglevel", zap.InfoLevel, "set logging level")
-	var filelog string
-	flag.StringVar(&filelog, "filelog", "", "choose file for logs, leave empty to use stderr")
+	var configFile string
+	flag.StringVar(&configFile, "config", "../../config.yaml", "use to set config destination")
 	flag.Parse()
-	_ = logLevel
+	conf := config.InitConfig()
+	confFile, err := os.ReadFile(configFile)
+	if err != nil {
+		log.Fatalf("can't read config file %s", err)
+	}
+	err = conf.ReadConfig(confFile)
+	if err != nil {
+		log.Fatalf("can't parse config file: %s", err)
+	}
+	z := logger.InitLogger(&conf.LogLevel, conf.LogFile)
+	z.Info("logger initiated")
 }
