@@ -36,7 +36,6 @@ func readQuery() string {
 func main() {
 	var configFile string
 	flag.StringVar(&configFile, "config", "../../config.yaml", "use to set config destination")
-	// flag.StringVar(&query, "query", "", "use flag to set query")
 	flag.Parse()
 	fmt.Println("Write your query")
 	query := readQuery()

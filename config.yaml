@@ -1,7 +1,7 @@
-timeout: 10
-loglevel: 1
+timeout: 100
+loglevel: 3
 logfile: 
-targetfile: small.csv
+targetfile: test.csv
 separator: ","
 # Debug = -1
 # Info = 0
