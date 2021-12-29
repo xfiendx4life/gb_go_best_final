@@ -11,8 +11,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xfiendx4life/gb_go_best_final/internal/logger"
 	cs "github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

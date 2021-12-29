@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
+	"github.com/xfiendx4life/gb_go_best_final/internal/logger"
 	ops "github.com/xfiendx4life/gb_go_best_final/pkg/operations"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/sqlparser"
 	"go.uber.org/zap"

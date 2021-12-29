@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
+	"github.com/xfiendx4life/gb_go_best_final/internal/config"
 )
 
 func createTestFile(data []byte) {

@@ -12,10 +12,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
+	"github.com/xfiendx4life/gb_go_best_final/internal/config"
+	"github.com/xfiendx4life/gb_go_best_final/internal/logger"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/consolewriter"
 	"github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/logger"
 	"go.uber.org/zap"
 )
 

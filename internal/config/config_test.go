@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xfiendx4life/gb_go_best_final/pkg/config"
+	"github.com/xfiendx4life/gb_go_best_final/internal/config"
 	"go.uber.org/zap/zapcore"
 )
 
