@@ -2,13 +2,14 @@ package consolewriter
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/xfiendx4life/gb_go_best_final/pkg/csvreader"
 )
 
 type Consolewriter interface {
-	Write(csvreader.Table)
+	Write(io.Writer, csvreader.Table)
 }
 
 type CWriter struct{}
@@ -17,7 +18,7 @@ func NewConsoleWriter() Consolewriter {
 	return &CWriter{}
 }
 
-func (cw *CWriter) Write(dat csvreader.Table) {
+func (cw *CWriter) Write(out io.Writer, dat csvreader.Table) {
 	tab := dat.GetTable()
 	maxLen := getLongestWordLen(tab) + 1
 	keys := make([]string, 0, len(tab))
@@ -30,14 +31,14 @@ func (cw *CWriter) Write(dat csvreader.Table) {
 		break
 	}
 	line := printLine(keys, maxLen)
-	fmt.Println(line)
+	fmt.Fprintln(out, line)
 	for i := 0; i < l; i++ {
 		vals := make([]string, 0)
 		for _, k := range keys {
 			vals = append(vals, tab[k][i])
 		}
 		line = printLine(vals, maxLen)
-		fmt.Println(line)
+		fmt.Fprintln(out, line)
 	}
 
 }

@@ -73,7 +73,7 @@ func main() {
 	case err := <-errChan:
 		z.Errorf("error while processing table: %s", err)
 	case res := <-resChan:
-		consolewriter.NewConsoleWriter().Write(res)
+		consolewriter.NewConsoleWriter().Write(os.Stdout, res)
 	}
 
 }
